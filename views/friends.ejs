@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Challenge App</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .form-popup {
+      display: none;
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      border: 3px solid #f1f1f1;
+      z-index: 9;
+      background-color: white;
+      padding: 20px;
+      width: 300px;
+    }
+    .friend-list {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-sm navbar-light bg-light">
+    <a class="navbar-brand" href="/Fitness-app/views/landing_page.ejs">Challenge App</a>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" href="/Fitness-app/views/landing_page.ejs">Challenges</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/Fitness-app/views/friends.ejs">Friends</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#activeChallenges">Active Challenges</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Friends Section -->
+  <div class="container mt-5" id="friends">
+    <div class="input-group mb-3">
+      <input type="text" class="form-control" placeholder="Search for users..." id="searchInput">
+      <div class="input-group-append">
+        <button class="btn btn-outline-secondary" type="button" id="searchButton">
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+    </div>
+    <!-- Search Results -->
+    <div id="searchResults" class="list-group"></div>
+    <!-- Friends List -->
+    <div class="friend-list">
+      <h5>Your Friends:</h5>
+      <ul id="friendsList" class="list-group"></ul>
+      <p id="noFriendsMsg" style="display: none;">Add friends</p>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS and jQuery -->
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+
+  <!-- Custom JS -->
+  <script>
+    $(document).ready(function() {
+      // Fetch initial friends list
+      fetchFriends();
+
+      // Search button click event
+      $('#searchButton').click(function() {
+        const searchTerm = $('#searchInput').val();
+        searchUsers(searchTerm);
+      });
+
+      // Function to fetch and display the user's friends
+      function fetchFriends() {
+        $.ajax({
+          url: '/api/friends',
+          method: 'GET',
+          success: function(data) {
+            displayFriends(data.friends);
+          }
+        });
+      }
+
+      // Function to search for users
+      function searchUsers(query) {
+        $.ajax({
+          url: `/api/search?query=${query}`,
+          method: 'GET',
+          success: function(data) {
+            displaySearchResults(data.users);
+          }
+        });
+      }
+
+      // Function to display friends in the list
+      function displayFriends(friends) {
+        $('#friendsList').empty();
+        if (friends.length === 0) {
+          $('#noFriendsMsg').show();
+        } else {
+          $('#noFriendsMsg').hide();
+          friends.forEach(friend => {
+            $('#friendsList').append(`<li class="list-group-item">${friend.name}</li>`);
+          });
+        }
+      }
+
+      // Function to display search results
+      function displaySearchResults(users) {
+        $('#searchResults').empty();
+        users.forEach(user => {
+          $('#searchResults').append(`<a href="#" class="list-group-item list-group-item-action" name="friend_id" value="${user.id}" data-id="${user.id}">${user.name}</a>`);
+        });
+
+        // Click event to add user as friend
+        $('#searchResults a').click(function() {
+          const userId = $(this).data('id');
+          console.log(userId);
+          addFriend(userId);
+        });
+      }
+
+      // Function to add a user as a friend
+      function addFriend(userId) {
+        $.ajax({
+          url: `/api/add-friend`,
+          method: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({ userId }),
+          success: function(data) {
+            fetchFriends(); // Refresh friends list after adding
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

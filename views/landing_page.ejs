@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Challenge App</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .form-popup {
+      display: none;
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      border: 3px solid #f1f1f1;
+      z-index: 9;
+      background-color: white;
+      padding: 20px;
+      width: 300px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-sm navbar-light bg-light">
+    <a class="navbar-brand" href="/Fitness-app/views/landing_page.ejs">Challenge App</a>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item active">
+          <a class="nav-link" href="/Fitness-app/views/landing_page.ejs">Challenges</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/Fitness-app/views/friends.ejs">Friends</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Active Challenges</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Challenges Section -->
+  <div class="container mt-5" id="challenges">
+    <div class="card">
+      <div class="card-body">
+        <h1 id="Excercise-1">Push up</h1>
+        <button class="btn btn-primary" id="createButton">Create</button>
+      </div>
+    </div>
+  </div>
+
+   <!-- Active Challenges Section -->
+   <div id="active-challenges-section">
+    <!-- Active challenges will be dynamically added here -->
+    </div>
+
+  <!-- Form Popup -->
+  <div class="form-popup" id="challengeForm">
+    <form id="challengeFormContent">
+      <h2 id="challengeTitle"></h2>
+      <div class="form-group">
+        <label for="startTime">Starting Time:</label>
+        <input type="datetime-local" id="startTime" class="form-control" required>
+      </div>
+
+      <div class="form-group">
+        <label for="endTime">Ending Time:</label>
+        <input type="datetime-local" id="endTime" class="form-control" required>
+      </div>
+
+        <!-- New Input for No of Pushups -->
+        <div class="mb-3">
+            <label for="noOfPushups" class="form-label">No of Pushups</label>
+            <input type="number" class="form-control" id="noOfPushups" min="1" required>
+        </div>
+
+       <!-- Buttons and Dynamic Wage Input -->
+       <div class="mb-3 d-flex align-items-center">
+        <button type="button" class="btn btn-primary me-2 mr-2" id="placeWageButton">Wage</button>
+        <!-- Hidden input for wage, will be shown when button is clicked -->
+        <div class="input-group" id="wageInputContainer" style="display: none;">
+          <span class="input-group-text">₹</span>
+          <input type="number" class="form-control" id="wageAmount" placeholder="Enter amount">
+        </div>
+      </div>
+
+     <!-- Button to trigger the Invite Friends modal -->
+        <button type="button" class="btn btn-primary mt-2" data-toggle="modal" id="invite-friends-btn" data-target="#friendsModal">Invite Friends</button>
+       <!-- <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#friendsModal">
+            Invite Friends
+        </button>
+        -->
+
+      <button type="button" class="btn btn-primary" id="createChallengeButton">Create</button>
+    </form>
+  </div>
+
+  <!-- Friends List Modal -->
+  <div class="modal fade" id="friendsModal" tabindex="-1" role="dialog" aria-labelledby="friendsModalLabel" aria-hidden="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="friendsModalLabel">Invite Friends to Challenge</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div id="friends-list">
+            <!-- Friends list with checkboxes will be populated here -->
+            </div>
+            <button class="btn btn-success mt-2" id="confirm-invite-btn">Confirm Invitation</button>
+        </div>
+        </div>
+    </div>
+    </div>
+
+    
+    <!-- Hidden input to store invited friends -->
+    <input type="hidden" id="invitedFriends" value="[]">
+
+
+  <!-- Bootstrap JS and jQuery -->
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <!--<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>-->
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+  <!-- Custom JS -->
+  <script>
+    $(document).ready(function() {
+      // Show form when "Create" button is clicked
+      $('#createButton').click(function() {
+        $('#challengeTitle').text('Push up');  // Set the title dynamically based on challenge
+        $('#challengeForm').show();
+      });
+
+      // Hide form on "Create Challenge" button click and log form values
+     /* $('#createChallengeButton').click(function() {
+        $('#challengeForm').hide();
+        const startTime = $('#startTime').val();
+        const endTime = $('#endTime').val();
+        const noOfPushups = $('#noOfPushups').val();
+        console.log(`Challenge Created: Push up, Start Time: ${startTime}, End Time: ${endTime}, Target: ${noOfPushups} Pushups`);
+      }); */
+
+      // Show wage input field when "Place a Wage" button is clicked
+        $('#placeWageButton').on('click', function() {
+            $('#wageInputContainer').toggle();  // Toggle the visibility of the wage input
+        });
+
+    // Show friend selection when "Invite Friends" is clicked
+    $('#invite-friends-btn').click(function() {
+            $('#friendsModal').modal('show');
+            fetchFriends(); // Fetch and display friends in modal
+    });
+
+  // Fetch friends from the server and populate the modal
+  function fetchFriends() {
+    $.ajax({
+      url: '/api/friends', // This endpoint should return the current user's friends
+      method: 'GET',
+      success: function(data) {
+        $('#friends-list').empty(); // Clear existing list
+        data.friends.forEach(friend => {
+          $('#friends-list').append(`
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input friend-checkbox" value="${friend.id}">
+              <label class="form-check-label">${friend.name}</label>
+            </div>
+          `);
+        });
+      },
+      error: function(err) {
+        console.error('Failed to fetch friends:', err);
+      }
+    });
+  }
+
+  // Handle Confirm Invitation button click
+  $('#confirm-invite-btn').click(function() {
+    let invitedFriends = [];
+    $('.friend-checkbox:checked').each(function() {
+      invitedFriends.push($(this).val());
+    });
+
+    // Save invited friends data in a hidden input
+    $('#invitedFriends').val(JSON.stringify(invitedFriends));
+    $('#friendsModal').modal('hide');
+  });
+
+  // Handle challenge creation form submission
+    $('#createChallengeButton').click(function() {
+    $('#challengeForm').hide();
+    
+    const challengeData = {
+      startTime: $('#startTime').val(),
+      endTime: $('#endTime').val(),
+      noOfPushups: $('#noOfPushups').val(),
+      wageAmount: $('#wageAmount').val(),
+      invitedFriends: JSON.parse($('#invitedFriends').val())
+    };
+
+    $.ajax({
+      url: '/api/create-challenge',
+      method: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify(challengeData),
+      success: function(data) {
+        // Add challenge to Active Challenges for user and invited friends
+        addToActiveChallenges(data.challenge);
+      },
+      error: function(err) {
+        console.error('Failed to create challenge:', err);
+      }
+    });
+  });
+
+    // Add challenge to Active Challenges section dynamically
+    function addToActiveChallenges(challenge) {
+        $('#active-challenges-section').append(`
+        <div class="card mt-3">
+            <div class="card-body">
+            <h5 class="card-title">${challenge.name}</h5>
+            <button class="btn btn-info view-details-btn" data-id="${challenge.id}">View Details</button>
+            <button class="btn btn-success join-btn" data-id="${challenge.id}">Join</button>
+            </div>
+        </div>
+        `);
+    }
+
+        // View details button functionality
+        $(document).on('click', '.view-details-btn', function() {
+            const challengeId = $(this).data('id');
+            $.ajax({
+            url: `/api/challenge-details/${challengeId}`,
+            method: 'GET',
+            success: function(data) {
+                // Show challenge details in a modal or a dedicated section
+                alert(JSON.stringify(data));
+            },
+            error: function(err) {
+                console.error('Failed to fetch challenge details:', err);
+            }
+            });
+        });
+
+        // Join button functionality
+        $(document).on('click', '.join-btn', function() {
+            const challengeId = $(this).data('id');
+            $.ajax({
+            url: `/api/join-challenge/${challengeId}`,
+            method: 'POST',
+            success: function(data) {
+                alert('You have joined the challenge!');
+            },
+            error: function(err) {
+                console.error('Failed to join challenge:', err);
+            }
+            });
+        });
+});
+</script>
+</body>
+</html>
